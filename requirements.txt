@@ -1,0 +1,13 @@
+groq
+pinecone
+python-dotenv
+os
+sentence-transformers
+sklearn
+fastapi
+uvicorn
+asyncio
+pytest 
+Starlette
+pydantic
+pydantic-settings
