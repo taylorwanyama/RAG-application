@@ -6,6 +6,8 @@ from pinecone import Pinecone
 from groq import AsyncGroq
 from app.config import settings
 
+
+from app.dependencies import RAGDependencies
 #load_dotenv()
 
 #PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
@@ -31,13 +33,16 @@ groq_client = AsyncGroq(
     )
 
 
-async def retrieve_chunks(question, top_k=2):
+async def retrieve_chunks(
+    question,
+    dependencies: RAGDependencies,
+    top_k=2):
 
-    query_embedding = embedding_model.encode(question)
+    query_embedding = dependencies.embedding_model.encode(question)
 
     result = await asyncio.wait_for(
         asyncio.to_thread(
-            index.query,
+            dependencies.pinecone_index.query,
             vector=query_embedding.tolist(),
             top_k=top_k,
             include_metadata=True
@@ -60,7 +65,11 @@ def build_context(matches):
     return "\n\n".join(retrieved_chunks)
 
 
-async def generate_answer(question, context):
+async def generate_answer(
+    question,
+    context,
+    dependencies: RAGDependencies
+    ):
 
     prompt = f"""
 You are an assistant answering questions using company documents.
@@ -83,7 +92,7 @@ Question:
 Answer:
 """
 
-    response = await groq_client.chat.completions.create(
+    response = await dependencies.groq_client.chat.completions.create(
         model=settings.groq_model,
         messages=[
             {
@@ -96,15 +105,22 @@ Answer:
     return response.choices[0].message.content
 
 
-async def answer_question(question):
+async def answer_question(
+    question,
+    dependencies: RAGDependencies
+):
 
-    matches = await retrieve_chunks(question)
+    matches = await retrieve_chunks(
+        question,
+        dependencies
+    )
 
     context = build_context(matches)
 
     answer = await generate_answer(
         question,
-        context
+        context,
+        dependencies
     )
 
     return answer
