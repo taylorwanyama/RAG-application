@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from pydantic import BaseModel, Field
 from app.rag_service import answer_question
 import asyncio
@@ -52,17 +52,19 @@ class QuestionRequest(BaseModel):
         max_length=1000
     )
 
+def get_rag_dependencies(request: Request) -> RAGDependencies:
+    return request.app.state.rag_dependencies  
 
 @app.post('/ask')
 async def ask(
-    request: Request,
-    question_request: QuestionRequest
+    question_request: QuestionRequest,
+    dependencies: RAGDependencies = Depends(get_rag_dependencies)
     ):
 
     try:
         answer = await answer_question(
             question_request.question,
-            request.app.state.rag_dependencies
+            dependencies
         )
         return {
                 'Answer': answer
