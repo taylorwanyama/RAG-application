@@ -15,22 +15,22 @@ from app.dependencies import RAGDependencies
 
 
 # Load the embedding model
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+#embedding_model = SentenceTransformer("all-MiniLM-L6-v2") remaove it because it now belongs to the lifespan function in main.py
 
 
 # Connect to Pinecone
 # pc = Pinecone(api_key="invalid-key") # Deliberately breaking the system to test error handling
 #pc = Pinecone(api_key=PINECONE_API_KEY)
-pc = Pinecone(api_key=settings.pinecone_api_key)
+#pc = Pinecone(api_key=settings.pinecone_api_key)
 #index = pc.Index("company-book")
-index = pc.Index(settings.pinecone_index)
+#index = pc.Index(settings.pinecone_index)
 
 
 # Connect to Groq
-groq_client = AsyncGroq(
-    api_key=settings.groq_api_key,
-    timeout=settings.groq_timeout   # Setting a timeout of 30 seconds for Groq API requests
-    )
+#groq_client = AsyncGroq(
+    #api_key=settings.groq_api_key,
+    #timeout=settings.groq_timeout   # Setting a timeout of 30 seconds for Groq API requests
+    #)
 
 
 async def retrieve_chunks(
