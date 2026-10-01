@@ -7,6 +7,7 @@ from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
 from groq import AsyncGroq
 import logging
+import time
 
 from app.config import settings
 from app.dependencies import RAGDependencies
@@ -78,23 +79,40 @@ async def ask(
     question_request: QuestionRequest,
     dependencies: RAGDependencies = Depends(get_rag_dependencies)
     ):
+    start_time = time.perf_counter()
 
     try:
         answer = await answer_question(
             question_request.question,
             dependencies
         )
+        duration = time.perf_counter() - start_time
+
+        logger.info(
+            "RAG request completed | duration=%.3fs",
+            duration
+        )
+
         return {
                 'Answer': answer
             }
     except asyncio.TimeoutError:
+        logger.warning(
+            "RAG request timed out | duration=%.3fs",
+            duration
+        )
         raise HTTPException(
             status_code=504,
             detail='A required service took too long to respond. Please try again later.'
         )
     except Exception as e:
+        duration = time.perf_counter() - start_time
+
         #print(f"ERROR: {type(e).__name__}: {e}")
-        logger.exception('Unexpected error while processing request')
+        logger.exception(
+            'Unexpected error while processing request| duration=%.3fs',
+            duration
+        )
 
         raise HTTPException(
             status_code=500,

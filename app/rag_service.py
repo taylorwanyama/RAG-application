@@ -6,6 +6,7 @@ from pinecone import Pinecone
 from groq import AsyncGroq
 from app.config import settings
 import logging
+import time
 
 from app.dependencies import RAGDependencies
 #load_dotenv()
@@ -83,7 +84,8 @@ Question:
 
 Answer:
 """
-
+    groq_start_time = time.perf_counter()
+ 
     response = await dependencies.groq_client.chat.completions.create(
         model=settings.groq_model,
         messages=[
@@ -92,6 +94,12 @@ Answer:
                 "content": prompt
             }
         ]
+    )
+
+    groq_duration = time.perf_counter() - groq_start_time
+    logger.info(
+        'Groq response completed | duration=%.3fs',
+        groq_duration
     )
 
     return response.choices[0].message.content
