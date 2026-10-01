@@ -6,15 +6,26 @@ import asyncio
 from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
 from groq import AsyncGroq
+import logging
 
 from app.config import settings
 from app.dependencies import RAGDependencies
 from app.retriever import PineconeRetriever
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+#To turn down http library logging noise
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    print("Starting application...")
+    logger.info('Starting application')
 
     embedding_model = SentenceTransformer(
         "all-MiniLM-L6-v2"
@@ -44,12 +55,11 @@ async def lifespan(app: FastAPI):
         groq_client=groq_client
     )
 
-    print("Application resources initialized.")
+    logger.info('Application resources initialized.')
 
     yield
 
-    print("Shutting down application...")
-    
+    logger.info('Shutting down application')
 
 
 app = FastAPI(lifespan=lifespan)
@@ -83,7 +93,9 @@ async def ask(
             detail='A required service took too long to respond. Please try again later.'
         )
     except Exception as e:
-        print(f"ERROR: {type(e).__name__}: {e}")
+        #print(f"ERROR: {type(e).__name__}: {e}")
+        logger.exception('Unexpected error while processing request')
+
         raise HTTPException(
             status_code=500,
             detail='An internal error occurred while processing the request.' 

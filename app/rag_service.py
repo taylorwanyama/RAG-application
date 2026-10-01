@@ -5,10 +5,12 @@ from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
 from groq import AsyncGroq
 from app.config import settings
-
+import logging
 
 from app.dependencies import RAGDependencies
 #load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 #PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 #GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -96,12 +98,16 @@ Answer:
 
 
 async def answer_question(question,dependencies):
+    logger.info('Starting RAG request')
 
     matches = await retrieve_chunks(
         question,
         dependencies
     )
-
+    logger.info(
+        'Retrieved %d relevant chunks',
+        len(matches)
+    ) 
     context = build_context(matches)
 
     answer = await generate_answer(
@@ -109,5 +115,7 @@ async def answer_question(question,dependencies):
         context,
         dependencies
     )
+
+    logger.info('RAG request completed.')
 
     return answer
