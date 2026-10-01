@@ -35,22 +35,12 @@ from app.dependencies import RAGDependencies
 
 async def retrieve_chunks(
     question,
-    dependencies: RAGDependencies,
+    dependencies,
     top_k=2):
-
-    query_embedding = dependencies.embedding_model.encode(question)
-
-    result = await asyncio.wait_for(
-        asyncio.to_thread(
-            dependencies.pinecone_index.query,
-            vector=query_embedding.tolist(),
-            top_k=top_k,
-            include_metadata=True
-        ),
-        timeout=10.0
+    return await dependencies.retriever.retrieve(
+        question,
+        top_k=top_k
     )
-
-    return result["matches"]
 
 
 def build_context(matches):
@@ -105,10 +95,7 @@ Answer:
     return response.choices[0].message.content
 
 
-async def answer_question(
-    question,
-    dependencies: RAGDependencies
-):
+async def answer_question(question,dependencies):
 
     matches = await retrieve_chunks(
         question,

@@ -9,6 +9,7 @@ from groq import AsyncGroq
 
 from app.config import settings
 from app.dependencies import RAGDependencies
+from app.retriever import PineconeRetriever
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,10 +32,15 @@ async def lifespan(app: FastAPI):
         api_key=settings.groq_api_key,
         timeout=settings.groq_timeout
     )
+    retriever = PineconeRetriever(
+        embedding_model=embedding_model,
+        pinecone_index=pinecone_index
+   )
 
     app.state.rag_dependencies = RAGDependencies(
-        embedding_model=embedding_model,
-        pinecone_index=pinecone_index,
+        #embedding_model=embedding_model,
+        #pinecone_index=pinecone_index,
+        retriever=retriever,
         groq_client=groq_client
     )
 
@@ -43,6 +49,8 @@ async def lifespan(app: FastAPI):
     yield
 
     print("Shutting down application...")
+    
+
 
 app = FastAPI(lifespan=lifespan)
 
