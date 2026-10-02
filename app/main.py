@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Header
 from pydantic import BaseModel, Field
 from app.rag_service import answer_question
 import asyncio
@@ -12,6 +12,7 @@ import time
 from app.config import settings
 from app.dependencies import RAGDependencies
 from app.retriever import PineconeRetriever
+from app.rate_limiter import RateLimiter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,7 +24,10 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
-
+rate_limiter = RateLimiter(
+    max_requests=3,
+    window_seconds=60
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,6 +80,22 @@ class QuestionRequest(BaseModel):
 def get_rag_dependencies(request: Request) -> RAGDependencies:
     return request.app.state.rag_dependencies 
 
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != settings.api_key:
+        raise HTTPException(
+            status_code=401,
+            detail='Invalid or missing API key.'
+        )
+
+def check_rate_limit(
+    x_api_key: str = Header(...)
+):
+    if not rate_limiter.allow(x_api_key):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded. Please try again later."
+        )    
+    
 @app.get('/health/live') 
 async def liveness():
     return {'status': 'Alive'}
@@ -92,7 +112,9 @@ async def readiness(request: Request):
 @app.post('/ask')
 async def ask(
     question_request: QuestionRequest,
-    dependencies: RAGDependencies = Depends(get_rag_dependencies)
+    dependencies: RAGDependencies = Depends(get_rag_dependencies),
+    _:None = Depends(verify_api_key),
+    __: None = Depends(check_rate_limit)
     ):
     start_time = time.perf_counter()
 

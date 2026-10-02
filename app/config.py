@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     groq_api_key: str
     pinecone_api_key: str
     pinecone_index: str
-
+    api_key: str
     groq_model: str = "openai/gpt-oss-20b"
     groq_timeout: float = 30.0
 
