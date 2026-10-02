@@ -61,7 +61,7 @@ pc.create_index(
 )
 
 # Connect to the index
-index = pc.Index("company-book1")
+index = pc.Index("company-book")
 
 # Prepare vectors
 vectors = []

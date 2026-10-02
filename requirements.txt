@@ -1,14 +1,11 @@
 groq
 pinecone
 python-dotenv
-os
 sentence-transformers
-sklearn
+scikit-learn
 fastapi
 uvicorn
-asyncio
 pytest 
 Starlette
 pydantic
 pydantic-settings
-logging

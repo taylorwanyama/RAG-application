@@ -23,6 +23,8 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
@@ -72,7 +74,20 @@ class QuestionRequest(BaseModel):
     )
 
 def get_rag_dependencies(request: Request) -> RAGDependencies:
-    return request.app.state.rag_dependencies  
+    return request.app.state.rag_dependencies 
+
+@app.get('/health/live') 
+async def liveness():
+    return {'status': 'Alive'}
+
+@app.get('/health/ready')
+async def readiness(request: Request):
+    if getattr(request.app.state, 'rag_dependencies', None) is None:
+        raise HTTPException(
+            status_code=503,
+            detail='Applictaion is not ready.'
+        )
+    return {'status': 'Ready'}
 
 @app.post('/ask')
 async def ask(
@@ -97,6 +112,7 @@ async def ask(
                 'Answer': answer
             }
     except asyncio.TimeoutError:
+        duration = time.perf_counter() - start_time
         logger.warning(
             "RAG request timed out | duration=%.3fs",
             duration
