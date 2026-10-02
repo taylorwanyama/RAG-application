@@ -105,7 +105,10 @@ async def liveness():
     return {'status': 'Alive'}
 
 @app.get('/health/ready')
-async def readiness(request: Request):
+async def readiness(
+    request: Request,
+    _: str = Depends(verify_api_key)):
+    
     if getattr(request.app.state, 'rag_dependencies', None) is None:
         raise HTTPException(
             status_code=503,
