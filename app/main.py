@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, Depends, Header
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 from app.rag_service import answer_question
 import asyncio
@@ -70,6 +71,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+api_key_header = APIKeyHeader(name='X-API-Key')
 
 class QuestionRequest(BaseModel):
     question : str = Field(
@@ -80,17 +82,19 @@ class QuestionRequest(BaseModel):
 def get_rag_dependencies(request: Request) -> RAGDependencies:
     return request.app.state.rag_dependencies 
 
-def verify_api_key(x_api_key: str = Header(...)):
-    if x_api_key != settings.api_key:
+def verify_api_key(api_key: str = Depends(api_key_header)):
+    #print("Received API key:", repr(api_key))
+    #print("Expected API key:", repr(settings.api_key))
+    if api_key != settings.api_key:
         raise HTTPException(
             status_code=401,
             detail='Invalid or missing API key.'
         )
 
 def check_rate_limit(
-    x_api_key: str = Header(...)
+    api_key: str = Depends(verify_api_key)
 ):
-    if not rate_limiter.allow(x_api_key):
+    if not rate_limiter.allow(api_key):
         raise HTTPException(
             status_code=429,
             detail="Rate limit exceeded. Please try again later."
@@ -113,7 +117,7 @@ async def readiness(request: Request):
 async def ask(
     question_request: QuestionRequest,
     dependencies: RAGDependencies = Depends(get_rag_dependencies),
-    _:None = Depends(verify_api_key),
+    #_:None = Depends(verify_api_key),
     __: None = Depends(check_rate_limit)
     ):
     start_time = time.perf_counter()
