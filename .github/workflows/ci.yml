@@ -9,6 +9,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GROQ_API_KEY: test-groq-api-key
+      PINECONE_API_KEY: test-pinecone-api-key
+      PINECONE_INDEX: test-index
+      API_KEY: test-api-key
 
     steps:
       - name: Checkout repository
