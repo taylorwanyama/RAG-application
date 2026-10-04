@@ -32,5 +32,14 @@ jobs:
       - name: Run tests
         run: pytest
 
+
+  docker-build:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
       - name: Build Docker image
-        run: docker build -t rag-api .
+        run: docker build -t rag-api:${{ github.sha }} .
