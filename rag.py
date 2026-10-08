@@ -13,7 +13,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
-index = pc.Index("company-book1")
+index = pc.Index("kenyan-active-tenders")
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
@@ -84,7 +84,7 @@ Answer:
 
 # Putting the entire pipeline together
 # question = "How many days of annual leave do employees get?"  # This is an answerable question 
-question = "What is the company's maternity leave policy?"   # An unanswerable question
+question = "Which tenders are related to medical equipment?"   # An unanswerable question
 
 matches = retrieve_chunks(question)
 

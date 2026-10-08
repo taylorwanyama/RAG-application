@@ -126,10 +126,10 @@ async def ask(
     start_time = time.perf_counter()
 
     try:
-        answer = await answer_question(
+        answer, tenders = await answer_question(
             question_request.question,
             dependencies
-        )
+       )
         duration = time.perf_counter() - start_time
 
         logger.info(
@@ -138,8 +138,10 @@ async def ask(
         )
 
         return {
-                'Answer': answer
-            }
+            "Answer": answer,
+            "Tenders": tenders
+        }
+    
     except asyncio.TimeoutError:
         duration = time.perf_counter() - start_time
         logger.warning(

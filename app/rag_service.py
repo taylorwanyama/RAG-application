@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 async def retrieve_chunks(
     question,
     dependencies,
-    top_k=2):
+    top_k=5):
     return await dependencies.retriever.retrieve(
         question,
         top_k=top_k
@@ -126,4 +126,20 @@ async def answer_question(question,dependencies):
 
     logger.info('RAG request completed.')
 
-    return answer
+    return answer,  [
+    {
+        "tender_ref": match["metadata"]["tender_ref"],
+        "county_id": match["metadata"]["county_id"],
+        "procuring_entity": match["metadata"]["procuring_entity"],
+        "procurement_method": match["metadata"]["procurement_method"],
+        "procurement_category": match["metadata"]["procurement_category"],
+        "close_at": match["metadata"]["close_at"],
+        "published_at": match["metadata"]["published_at"],
+        "venue": match["metadata"]["venue"],
+        "tender_fee": match["metadata"]["tender_fee"],
+        "validity_in_days": match["metadata"]["validity_in_days"],
+        "financial_year": match["metadata"]["financial_year"],
+        "tender_document_urls": match["metadata"]["tender_document_urls"]
+    }
+    for match in matches
+]
