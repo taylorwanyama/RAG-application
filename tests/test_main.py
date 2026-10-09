@@ -38,7 +38,7 @@ async def test_ask_returns_200():
                     "/ask",
                     json={
                         "question":
-                        "How many days of annual leave do employees get?"
+                        "Which tenders are related to medical equipment?"
                     }
                 )
 
@@ -49,7 +49,7 @@ async def test_ask_returns_200():
         }
 
         mock_rag.assert_awaited_once_with(
-            "How many days of annual leave do employees get?",
+            "Which tenders are related to medical equipment?",
             fake_dependencies
         )
 
@@ -83,7 +83,7 @@ async def test_ask_handles_rag_failure():
                 response = await client.post(
                     "/ask",
                     json={
-                        "question": "How many days of annual leave?"
+                        "question": "Which tenders are related to medical equipment?"
                     }
                 )
 
