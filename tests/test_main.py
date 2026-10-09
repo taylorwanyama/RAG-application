@@ -13,18 +13,17 @@ fake_dependencies = MagicMock()
 @pytest.mark.anyio
 async def test_ask_returns_200():
 
-    mock_answer = "Employees receive 21 days of annual leave each year."
+    mock_answer = "Which tenders are related to medical equipment?"
+    mock_tenders = []  
 
     app.dependency_overrides[verify_api_key] = lambda: "test-api-key"
     app.dependency_overrides[check_rate_limit] = lambda: None
-    app.dependency_overrides[get_rag_dependencies] = (
-        lambda: fake_dependencies
-    )
+    app.dependency_overrides[get_rag_dependencies] = lambda: fake_dependencies
 
     try:
         with patch(
             "app.main.answer_question",
-            new=AsyncMock(return_value=mock_answer)
+            new=AsyncMock(return_value=(mock_answer, mock_tenders))
         ) as mock_rag:
 
             transport = ASGITransport(app=app)
@@ -37,15 +36,15 @@ async def test_ask_returns_200():
                 response = await client.post(
                     "/ask",
                     json={
-                        "question":
-                        "Which tenders are related to medical equipment?"
+                        "question": "Which tenders are related to medical equipment?"
                     }
                 )
 
         assert response.status_code == 200
 
         assert response.json() == {
-            "Answer": mock_answer
+            "Answer": mock_answer,
+            "Tenders": mock_tenders
         }
 
         mock_rag.assert_awaited_once_with(
